@@ -1,0 +1,744 @@
+:root {
+  --sicp-acento: #4b49ac;
+  --sicp-acento-suave: #e6e6fa;
+  --sicp-fondo: #f6f7fd;
+  --sicp-borde: #dbddf2;
+  /* Color de las acciones principales (ej. "Nuevo proyecto"), distinto del índigo
+     de la navegación para que resalte como llamado a la acción — igual que en
+     design/ui-general.html. */
+  --sicp-coral: #f3797e;
+  --sicp-coral-hover: #e15f65;
+  /* Mismos 4 colores de tarjeta que el mockup, para el resumen de la pantalla principal. */
+  --sicp-tarjeta-1: #4747a1;
+  --sicp-tarjeta-2: #7da0fa;
+  --sicp-tarjeta-3: #7978e9;
+  --sicp-tarjeta-4: #f3797e;
+}
+
+body {
+  margin: 0;
+  background: var(--sicp-fondo);
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* ---------- botones (mismo estilo que la página de botones de Skydash) ----------
+   Ahí los botones son "píldora" (border-radius: 50px, su clase .btn-rounded) y las
+   acciones secundarias usan la variante "inverse": fondo suave del color, texto de
+   ese color, y se rellenan sólido recién al pasar el mouse — en vez de un simple
+   borde. Como usamos react-bootstrap, basta con sobrescribir las clases estándar de
+   Bootstrap para que todos los botones de la app se vean así, sin tocar cada
+   pantalla una por una. */
+.btn {
+  border-radius: 50px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background-color: var(--sicp-acento);
+  border-color: var(--sicp-acento);
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #3d3b8e !important;
+  border-color: #3d3b8e !important;
+}
+
+.btn-outline-secondary,
+.btn-outline-dark {
+  background-color: rgba(122, 120, 168, 0.15);
+  border-color: transparent;
+  color: #514f7a;
+}
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-dark:hover,
+.btn-outline-dark:focus {
+  background-color: #514f7a !important;
+  border-color: #514f7a !important;
+  color: #fff !important;
+}
+
+.btn-outline-danger {
+  background-color: rgba(220, 53, 69, 0.12);
+  border-color: transparent;
+  color: #dc3545;
+}
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+/* Mismos tonos que .pill.warn / .pill.ok, para que "dar de baja" (advertencia) y
+   "reactivar" (acción positiva) se lean distinto de "eliminar" (rojo) y "editar"
+   (gris neutro) en las tablas de Administración. */
+.btn-outline-warning {
+  background-color: rgba(180, 121, 30, 0.14);
+  border-color: transparent;
+  color: #b4791e;
+}
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+  background-color: #b4791e !important;
+  border-color: #b4791e !important;
+  color: #fff !important;
+}
+
+.btn-outline-success {
+  background-color: rgba(21, 128, 61, 0.14);
+  border-color: transparent;
+  color: #15803d;
+}
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+  color: #fff !important;
+}
+
+/* ---------- formularios (modelo de la página de "Basic elements" de Skydash) ----------
+   De esa referencia se toma: el tamaño de letra de las etiquetas (0.875rem) y su
+   espaciado con el campo (0.5rem), el padding más generoso de los inputs, y que el
+   foco se marque con un anillo de color en vez de solo cambiar el borde.
+   Diferencia a propósito: Skydash usa esquinas casi rectas (2px) en sus inputs;
+   acá se usa un radio más suave (8px) para que combine con el resto de la app
+   (tarjetas y botones ya redondeados) — así el formulario no desentona con todo lo
+   demás. El foco usa nuestro índigo, no el azul por defecto de Bootstrap que trae
+   esa página. */
+.form-label,
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2f2d5c;
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+  padding: 0.65rem 0.9rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--sicp-borde);
+  border-radius: 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sicp-acento);
+  box-shadow: 0 0 0 0.2rem rgba(75, 73, 172, 0.15);
+}
+
+.form-control::placeholder {
+  color: #a5a3c9;
+}
+
+/* ---------- estructura general (barra superior + lateral + contenido) ---------- */
+.disenio-principal {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-superior {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.disenio-principal__cuerpo {
+  display: flex;
+  flex: 1;
+}
+
+.disenio-principal__contenido {
+  flex: 1;
+  padding: 24px 28px;
+  max-width: 1180px;
+  /* Evita que una tabla ancha (min-width en table.projects) empuje el body entero
+     y genere una barra de scroll horizontal en toda la página — el scroll queda
+     contenido dentro de .table-wrap, como corresponde. */
+  min-width: 0;
+}
+
+/* ---------- barra lateral ---------- */
+.barra-lateral {
+  width: 235px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid var(--sicp-borde);
+  padding: 18px 14px;
+}
+
+.barra-lateral__cierre {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.barra-lateral__fondo {
+  display: none;
+}
+
+/* ---------- responsivo: menú lateral como panel deslizable ----------
+   Bajo el mismo breakpoint que usa react-bootstrap para "expand=md" en la barra
+   superior (768px), el menú deja de ocupar espacio fijo en el layout y pasa a ser
+   un panel que se desliza desde la izquierda, controlado por BarraSuperior (botón
+   hamburguesa) y DisenioPrincipal (estado abierto/cerrado). */
+@media (max-width: 767.98px) {
+  .barra-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1050;
+    width: 82vw;
+    max-width: 300px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    box-shadow: 0 0 32px rgba(20, 18, 50, 0.25);
+  }
+  .barra-lateral--abierta {
+    transform: translateX(0);
+  }
+  .barra-lateral__fondo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 50, 0.4);
+    z-index: 1040;
+  }
+  .disenio-principal__contenido {
+    padding: 16px;
+  }
+}
+
+.barra-lateral__boton-nuevo {
+  width: 100%;
+  background: var(--sicp-coral);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 12px -2px rgba(243, 121, 126, 0.45);
+}
+
+.barra-lateral__boton-nuevo:hover,
+.barra-lateral__boton-nuevo:focus,
+.barra-lateral__boton-nuevo:active {
+  background: var(--sicp-coral-hover) !important;
+  border-color: transparent !important;
+}
+
+.barra-lateral__grupo-titulo {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7a78a8;
+  font-weight: 700;
+  padding: 0 10px;
+  margin-bottom: 8px;
+}
+
+.barra-lateral__grupo-titulo--separado {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sicp-borde);
+}
+
+.barra-lateral__enlace {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #514f7a;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* El ítem seleccionado ya no se marca con un fondo de color — se distingue con
+   texto e ícono más marcados (más peso, color de acento). El fondo de color se
+   reserva para el hover (mouse encima), así queda claro cuál es una vista previa
+   pasajera y cuál es "dónde estoy ahora".
+   Se antepone ".barra-lateral" para ganarle en especificidad a los estilos por
+   defecto de Bootstrap para ".nav-pills .nav-link.active/.hover". */
+.barra-lateral .barra-lateral__enlace.active {
+  background: transparent;
+  color: var(--sicp-acento);
+  font-weight: 700;
+}
+
+.barra-lateral .barra-lateral__enlace:hover {
+  background: var(--sicp-acento);
+  color: #fff;
+}
+
+.barra-lateral__icono {
+  opacity: 0.75;
+}
+
+.barra-lateral .barra-lateral__enlace.active .barra-lateral__icono,
+.barra-lateral .barra-lateral__enlace:hover .barra-lateral__icono {
+  opacity: 1;
+}
+
+/* ---------- barra superior ---------- */
+.barra-superior__escudo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7472d9 0%, var(--sicp-acento) 60%, #3d3b8e 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.barra-superior__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7472d9 0%, var(--sicp-acento) 60%, #3d3b8e 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ---------- pantalla principal (misma estructura que design/ui-general.html) ---------- */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.page-head h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.page-head .page-sub {
+  color: #7a78a8;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.date-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--sicp-borde);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: #2f2d5c;
+  flex-shrink: 0;
+}
+.date-chip svg {
+  color: var(--sicp-acento);
+}
+
+.block {
+  margin-bottom: 28px;
+}
+.block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.block-head h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+.block-head .hint {
+  font-size: 12.5px;
+  color: #7a78a8;
+}
+
+/* ---------- tarjeta hero + resumen ---------- */
+.hero-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 12px;
+}
+@media (max-width: 900px) {
+  .hero-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #c3d8fe 0%, #a8c4fd 55%, #93b6fc 100%);
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+}
+.hero-illustration {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.hero-widget {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #262453;
+  border-radius: 14px;
+  padding: 10px 16px 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 20px -6px rgba(38, 36, 83, 0.3);
+}
+.hw-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sicp-acento-suave);
+  color: var(--sicp-acento);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hw-value {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+}
+.hw-label {
+  font-size: 11px;
+  color: #7a78a8;
+  margin-top: 2px;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 420px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-row-secundaria {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile.solid {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #fff;
+}
+.stat-tile .card-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: rgba(255, 255, 255, 0.32);
+}
+.stat-tile .label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.stat-tile .value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.stat-tile .delta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.stat-tile.c1 {
+  background: var(--sicp-tarjeta-1);
+}
+.stat-tile.c2 {
+  background: var(--sicp-tarjeta-2);
+}
+.stat-tile.c3 {
+  background: var(--sicp-tarjeta-3);
+}
+.stat-tile.c4 {
+  background: var(--sicp-tarjeta-4);
+}
+
+/* ---------- tabla de proyectos ---------- */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--sicp-borde);
+  border-radius: 20px;
+  background: #fff;
+}
+table.projects {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 640px;
+}
+table.projects th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7a78a8;
+  font-weight: 700;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--sicp-borde);
+}
+table.projects td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--sicp-borde);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+table.projects tr:last-child td {
+  border-bottom: none;
+}
+table.projects tr.proj-row:hover td {
+  background: var(--sicp-fondo);
+}
+.proj-name {
+  font-weight: 600;
+}
+.proj-commune {
+  color: #7a78a8;
+  font-size: 12.5px;
+}
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stepper-mini {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.stepper-mini .dot {
+  width: 14px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--sicp-fondo);
+  border: 1px solid var(--sicp-borde);
+}
+.stepper-mini .dot.done {
+  background: var(--sicp-acento-suave);
+  border-color: var(--sicp-acento-suave);
+}
+.stepper-mini .dot.current {
+  background: var(--sicp-acento);
+  border-color: var(--sicp-acento);
+}
+.stepper-frac {
+  font-size: 11px;
+  color: #7a78a8;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+}
+.pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pill.ok {
+  background: #cdf3d9;
+  color: #15803d;
+}
+.pill.warn {
+  background: #f1e4c4;
+  color: #b4791e;
+}
+.pill.crit {
+  background: #f3d8d6;
+  color: #b23a3a;
+}
+.pill.info {
+  background: var(--sicp-acento-suave);
+  color: var(--sicp-acento);
+}
+
+/* ---------- login ---------- */
+.pagina-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sicp-fondo);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.pagina-login__tarjeta {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* ---------- notificaciones toast (crear/editar) ----------
+   Estructura tomada de la sección "Jquery-toast styles" de la página de
+   notificaciones de Skydash: apiladas arriba a la derecha, entran deslizando desde
+   la derecha, se cierran solas con una barra de progreso. A diferencia del demo
+   (fondos sólidos verde/azul genéricos de Bootstrap 3), acá se usa una tarjeta
+   blanca con un ícono de color — mismos tokens que .pill.ok/.pill.info — en vez de
+   una paleta nueva. */
+.toast-wrap {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: all;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px -8px rgba(38, 36, 83, 0.25);
+  overflow: hidden;
+  animation: toast-entrada 0.25s ease;
+}
+.toast-item--saliendo {
+  animation: toast-salida 0.2s ease forwards;
+}
+
+.toast-item__fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 14px 12px;
+}
+.toast-item__icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.toast-item--success .toast-item__icono {
+  background: #cdf3d9;
+  color: #15803d;
+}
+.toast-item--info .toast-item__icono {
+  background: var(--sicp-acento-suave);
+  color: var(--sicp-acento);
+}
+.toast-item__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+.toast-item__titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #2f2d5c;
+}
+.toast-item__texto {
+  font-size: 12.5px;
+  color: #7a78a8;
+  margin-top: 2px;
+}
+.toast-item__cerrar {
+  background: none;
+  border: none;
+  color: #a5a3c9;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.toast-item__cerrar:hover {
+  color: #514f7a;
+}
+.toast-item__barra {
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation-name: toast-barra;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.toast-item--success .toast-item__barra {
+  background: #15803d;
+}
+.toast-item--info .toast-item__barra {
+  background: var(--sicp-acento);
+}
+
+@keyframes toast-entrada {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-salida {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes toast-barra {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (max-width: 480px) {
+  .toast-wrap {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+}
+
+/* ---------- utilitarias ---------- */
+.selector-proyecto {
+  max-width: 420px;
+}

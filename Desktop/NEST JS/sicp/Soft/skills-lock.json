@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-react-best-practices": {
+      "source": "sergiodxa/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-react-best-practices/SKILL.md",
+      "computedHash": "d79af29866e2c8cac7285743a3b049a92124bb0e466a43f71a136a614b78085f"
+    },
+    "nestjs-best-practices": {
+      "source": "kadajett/agent-nestjs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-best-practices/SKILL.md",
+      "computedHash": "29c326e77d1462ed9526996acae5da0cf4003146982abc8c67378f5dbad6b181"
+    },
+    "react-frontend": {
+      "source": "iliaal/ai-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-frontend/SKILL.md",
+      "computedHash": "05b08e1e44ed11ca4813eea250306320877f735adb8c011aaa5375bbd27a745d"
+    }
+  }
+}

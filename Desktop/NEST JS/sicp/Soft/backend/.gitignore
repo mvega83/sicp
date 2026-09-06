@@ -1,0 +1,23 @@
+# dependencias
+node_modules/
+
+# build
+dist/
+
+# variables de entorno (contienen contraseñas y claves — nunca subir a git)
+.env
+.env.local
+
+# archivos subidos por los usuarios en desarrollo local
+uploads/
+
+# logs
+*.log
+npm-debug.log*
+
+# cobertura de tests
+coverage/
+
+# editor / SO
+.vscode/
+.DS_Store

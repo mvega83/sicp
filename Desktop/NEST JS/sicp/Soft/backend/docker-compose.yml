@@ -1,0 +1,20 @@
+# Levanta una base de datos MySQL local para desarrollo.
+# Uso: docker compose up -d
+# Los datos quedan en el volumen "datos_mysql" para que no se pierdan al reiniciar el contenedor.
+services:
+  mysql:
+    image: mysql:8
+    container_name: sicp_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sicp
+      MYSQL_USER: sicp_usuario
+      MYSQL_PASSWORD: sicp_clave
+      MYSQL_ROOT_PASSWORD: sicp_root_clave
+    ports:
+      - '3306:3306'
+    volumes:
+      - datos_mysql:/var/lib/mysql
+
+volumes:
+  datos_mysql:
