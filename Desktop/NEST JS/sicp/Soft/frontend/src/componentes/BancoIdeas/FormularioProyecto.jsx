@@ -9,13 +9,19 @@ import Spinner from 'react-bootstrap/Spinner';
 import { actualizarProyecto, crearProyecto, obtenerProyecto } from '../../servicios/serviciosProyectos';
 import { listarTiposProyecto } from '../../servicios/serviciosTiposProyecto';
 import { listarLocalidades } from '../../servicios/serviciosLocalidades';
+import { listarCaracteristicasProyectos } from '../../servicios/serviciosCaracteristicasProyectos';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
+import MapaProyecto from '../comunes/MapaProyecto';
+
+// Por ahora todos los proyectos son de la comuna de Ovalle, así que el campo no se
+// muestra en el formulario y se envía siempre con este valor fijo.
+const COMUNA_FIJA = 'Ovalle';
 
 const VALORES_INICIALES = {
   nombre: '',
   idTipoProyecto: '',
   idLocalidad: '',
-  comuna: '',
+  comuna: COMUNA_FIJA,
   direccion: '',
   latitud: '',
   longitud: '',
@@ -27,18 +33,20 @@ export default function FormularioProyecto() {
   const { id } = useParams();
   const modoEdicion = Boolean(id);
   const [datos, setDatos] = useState(VALORES_INICIALES);
-  const [caracteristicas, setCaracteristicas] = useState([]);
-  const [nuevaCaracteristica, setNuevaCaracteristica] = useState('');
+  // Las características ahora vienen de un catálogo (no texto libre), así que el
+  // formulario solo guarda los ids seleccionados.
+  const [idsCaracteristicas, setIdsCaracteristicas] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   // En modo edición hay que traer los datos actuales del proyecto antes de mostrar
   // el formulario; en modo creación no hay nada que cargar.
   const [cargando, setCargando] = useState(modoEdicion);
-  // Catálogos para los selects de tipo de proyecto y localidad. Se cargan aparte
-  // y sin bloquear el spinner de edición: si demoran un instante, los selects
-  // simplemente aparecen vacíos hasta que lleguen.
+  // Catálogos para los selects de tipo de proyecto y localidad, y para las
+  // características. Se cargan aparte y sin bloquear el spinner de edición: si
+  // demoran un instante, aparecen vacíos hasta que lleguen.
   const [tiposProyecto, setTiposProyecto] = useState([]);
   const [localidades, setLocalidades] = useState([]);
+  const [catalogoCaracteristicas, setCatalogoCaracteristicas] = useState([]);
 
   useEffect(() => {
     if (!modoEdicion) return;
@@ -47,38 +55,42 @@ export default function FormularioProyecto() {
         nombre: proyecto.nombre,
         idTipoProyecto: proyecto.idTipoProyecto,
         idLocalidad: proyecto.idLocalidad,
-        comuna: proyecto.comuna,
+        comuna: COMUNA_FIJA,
         direccion: proyecto.direccion,
         latitud: proyecto.latitud,
         longitud: proyecto.longitud,
       });
-      setCaracteristicas(proyecto.caracteristicas ?? []);
+      // El backend entrega las características como objetos del catálogo; el
+      // formulario solo necesita sus ids para marcar los checkboxes correspondientes.
+      setIdsCaracteristicas((proyecto.caracteristicas ?? []).map((c) => c.id));
       setCargando(false);
     });
   }, [id, modoEdicion]);
 
-  // Carga los catálogos de tipo de proyecto y localidad siempre al montar,
-  // tanto en modo creación como en modo edición.
+  // Carga los catálogos de tipo de proyecto, localidad y características siempre
+  // al montar, tanto en modo creación como en modo edición.
   useEffect(() => {
-    Promise.all([listarTiposProyecto(), listarLocalidades()]).then(([tipos, locs]) => {
-      setTiposProyecto(tipos);
-      setLocalidades(locs);
-    });
+    Promise.all([listarTiposProyecto(), listarLocalidades(), listarCaracteristicasProyectos()]).then(
+      ([tipos, locs, caracteristicas]) => {
+        setTiposProyecto(tipos);
+        setLocalidades(locs);
+        setCatalogoCaracteristicas(caracteristicas);
+      },
+    );
   }, []);
 
   function actualizarCampo(campo, valor) {
     setDatos((anterior) => ({ ...anterior, [campo]: valor }));
   }
 
-  function agregarCaracteristica() {
-    const texto = nuevaCaracteristica.trim();
-    if (!texto) return;
-    setCaracteristicas((anteriores) => [...anteriores, texto]);
-    setNuevaCaracteristica('');
-  }
-
-  function quitarCaracteristica(indice) {
-    setCaracteristicas((anteriores) => anteriores.filter((_, i) => i !== indice));
+  // Marca/desmarca una característica del catálogo agregando o quitando su id
+  // del arreglo de seleccionadas.
+  function alternarCaracteristica(idCaracteristica, marcada) {
+    setIdsCaracteristicas((anteriores) =>
+      marcada
+        ? [...anteriores, idCaracteristica]
+        : anteriores.filter((id) => id !== idCaracteristica),
+    );
   }
 
   async function manejarEnvioFormulario(evento) {
@@ -89,7 +101,7 @@ export default function FormularioProyecto() {
       ...datos,
       latitud: parseFloat(datos.latitud),
       longitud: parseFloat(datos.longitud),
-      caracteristicas,
+      idsCaracteristicas,
     };
     try {
       if (modoEdicion) {
@@ -157,17 +169,7 @@ export default function FormularioProyecto() {
         </Row>
 
         <Row className="mb-3">
-          <Col md={3}>
-            <Form.Group>
-              <Form.Label>Comuna</Form.Label>
-              <Form.Control
-                value={datos.comuna}
-                onChange={(evento) => actualizarCampo('comuna', evento.target.value)}
-                required
-              />
-            </Form.Group>
-          </Col>
-          <Col md={3}>
+          <Col md={4}>
             <Form.Group>
               <Form.Label>Localidad</Form.Label>
               <Form.Select
@@ -182,7 +184,7 @@ export default function FormularioProyecto() {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col md={6}>
+          <Col md={8}>
             <Form.Group>
               <Form.Label>Dirección</Form.Label>
               <Form.Control
@@ -203,7 +205,7 @@ export default function FormularioProyecto() {
                 step="0.000001"
                 value={datos.latitud}
                 onChange={(evento) => actualizarCampo('latitud', evento.target.value)}
-                placeholder="-30.126840"
+                placeholder="-30.600600"
                 required
               />
             </Form.Group>
@@ -216,7 +218,7 @@ export default function FormularioProyecto() {
                 step="0.000001"
                 value={datos.longitud}
                 onChange={(evento) => actualizarCampo('longitud', evento.target.value)}
-                placeholder="-70.499120"
+                placeholder="-71.199700"
                 required
               />
             </Form.Group>
@@ -224,37 +226,42 @@ export default function FormularioProyecto() {
         </Row>
 
         <Form.Group className="mb-4">
+          <Form.Label>Ubicación en el mapa</Form.Label>
+          <p className="text-secondary small mb-2">
+            Haz clic en el mapa para fijar la ubicación; también puedes escribir las
+            coordenadas manualmente en los campos de arriba.
+          </p>
+          <MapaProyecto
+            latitud={datos.latitud}
+            longitud={datos.longitud}
+            onCambiarUbicacion={(lat, lng) => {
+              actualizarCampo('latitud', lat);
+              actualizarCampo('longitud', lng);
+            }}
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-4">
           <Form.Label>Características del proyecto</Form.Label>
-          <div className="d-flex gap-2 mb-2">
-            <Form.Control
-              value={nuevaCaracteristica}
-              onChange={(evento) => setNuevaCaracteristica(evento.target.value)}
-              placeholder="Ej. Luminaria perimetral"
-              onKeyDown={(evento) => {
-                if (evento.key === 'Enter') {
-                  evento.preventDefault();
-                  agregarCaracteristica();
-                }
-              }}
-            />
-            <Button variant="outline-secondary" onClick={agregarCaracteristica} type="button">
-              Agregar
-            </Button>
-          </div>
-          <div className="d-flex flex-wrap gap-2">
-            {caracteristicas.map((caracteristica, indice) => (
-              <span key={indice} className="badge bg-light text-dark border d-flex align-items-center gap-2">
-                {caracteristica}
-                <button
-                  type="button"
-                  className="btn-close btn-close-sm"
-                  style={{ fontSize: '0.6rem' }}
-                  onClick={() => quitarCaracteristica(indice)}
-                  aria-label="Quitar"
-                />
-              </span>
-            ))}
-          </div>
+          {catalogoCaracteristicas.length ? (
+            <Row>
+              {catalogoCaracteristicas.map((caracteristica) => (
+                <Col key={caracteristica.id} md={4} className="mb-2">
+                  <Form.Check
+                    type="checkbox"
+                    id={`caracteristica-${caracteristica.id}`}
+                    label={caracteristica.nombre}
+                    checked={idsCaracteristicas.includes(caracteristica.id)}
+                    onChange={(evento) =>
+                      alternarCaracteristica(caracteristica.id, evento.target.checked)
+                    }
+                  />
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <p className="text-secondary small mb-0">No hay características configuradas todavía.</p>
+          )}
         </Form.Group>
 
         <Button type="submit" variant="primary" disabled={enviando}>

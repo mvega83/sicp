@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -10,6 +12,7 @@ import {
 import { EtapaProyecto } from '../../bitacora/entidades/bitacora.entity';
 import { TipoProyecto } from '../../tipos-proyecto/entidades/tipo-proyecto.entity';
 import { Localidad } from '../../localidades/entidades/localidad.entity';
+import { CaracteristicaProyecto } from '../../caracteristicas-proyectos/entidades/caracteristica-proyecto.entity';
 
 // MySQL devuelve las columnas "decimal" como texto (para no perder precisión), pero
 // para el frontend es más cómodo trabajar con un number normal en coordenadas. Este
@@ -64,11 +67,15 @@ export class Proyecto {
   @Column({ type: 'decimal', precision: 10, scale: 6, transformer: transformadorDecimal })
   longitud: number;
 
-  // Lista libre de características (ej. "Luminaria perimetral", "Cierre
-  // perimetral"): cada tipo de proyecto puede tener características distintas, así
-  // que se guardan como texto libre en vez de una tabla de opciones fijas.
-  @Column({ type: 'json', nullable: true })
-  caracteristicas: string[];
+  // Antes era texto libre (string[] en json), pero eso permitía duplicados y typos
+  // (ej. "Luminaria" vs "luminaria perimetral"). Ahora es una relación real contra el
+  // catálogo de Configuración (caracteristicas-proyectos), que además puede mantener
+  // la lista sin tocar código. El dueño de la relación es Proyecto (por eso el
+  // @JoinTable va acá): conceptualmente "un proyecto tiene características de un
+  // catálogo fijo", no al revés.
+  @ManyToMany(() => CaracteristicaProyecto)
+  @JoinTable()
+  caracteristicas: CaracteristicaProyecto[];
 
   // URLs de las imágenes subidas (ver ArchivosModule / ProyectosController).
   @Column({ type: 'json', nullable: true })

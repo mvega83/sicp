@@ -6,6 +6,7 @@ import { join } from 'path';
 // cuál vive.
 export const SUBCARPETAS_ARCHIVOS = [
   'proyectos',
+  'financiamiento',
   'licitaciones',
   'proveedores',
   'obras',

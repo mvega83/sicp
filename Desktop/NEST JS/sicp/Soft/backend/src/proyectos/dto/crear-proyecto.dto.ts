@@ -5,7 +5,6 @@ import {
   IsLongitude,
   IsNotEmpty,
   IsOptional,
-  IsString,
   IsUUID,
   MaxLength,
 } from 'class-validator';
@@ -37,9 +36,11 @@ export class CrearProyectoDto {
   @IsLongitude({ message: 'La longitud no es válida' })
   longitud: number;
 
+  // Se reciben ids del catálogo de características (no texto libre): el servicio se
+  // encarga de resolverlos a entidades antes de guardar la relación.
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(30)
-  @IsString({ each: true })
-  caracteristicas?: string[];
+  @IsUUID('all', { each: true, message: 'Cada característica seleccionada debe ser válida' })
+  idsCaracteristicas?: string[];
 }

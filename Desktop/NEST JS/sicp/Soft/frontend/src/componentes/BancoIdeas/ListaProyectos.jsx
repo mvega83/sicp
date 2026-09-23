@@ -46,7 +46,7 @@ export default function ListaProyectos() {
             <thead>
               <tr>
                 <th>Proyecto</th>
-                <th>Tipo</th>
+                <th>Tipo y localidad</th>
                 <th>Etapa</th>
                 <th>Actualizado</th>
               </tr>
@@ -60,9 +60,18 @@ export default function ListaProyectos() {
                       <Link to={`/proyectos/${proyecto.id}`} className="text-decoration-none">
                         <div className="proj-name">{proyecto.nombre}</div>
                       </Link>
-                      <div className="proj-commune">{proyecto.comuna}</div>
+                      {proyecto.comuna && <span className="pill comuna">{proyecto.comuna}</span>}
                     </td>
-                    <td>{proyecto.tipoProyecto?.nombre}</td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {proyecto.tipoProyecto?.nombre && (
+                          <span className="pill tipo">{proyecto.tipoProyecto.nombre}</span>
+                        )}
+                        {proyecto.localidad?.nombre && (
+                          <span className="pill localidad">{proyecto.localidad.nombre}</span>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <span className={`pill ${estado.tipo}`}>{estado.texto}</span>
                     </td>

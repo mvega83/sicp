@@ -1,7 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Proyecto } from './entidades/proyecto.entity';
+import { CaracteristicaProyecto } from '../caracteristicas-proyectos/entidades/caracteristica-proyecto.entity';
 import { CrearProyectoDto } from './dto/crear-proyecto.dto';
 import { ActualizarProyectoDto } from './dto/actualizar-proyecto.dto';
 import { BitacoraService } from '../bitacora/bitacora.service';
@@ -12,14 +13,25 @@ export class ProyectosService {
   constructor(
     @InjectRepository(Proyecto)
     private readonly repositorioProyectos: Repository<Proyecto>,
+    @InjectRepository(CaracteristicaProyecto)
+    private readonly repositorioCaracteristicas: Repository<CaracteristicaProyecto>,
     private readonly bitacoraService: BitacoraService,
   ) {}
 
   async crear(datos: CrearProyectoDto, nombreUsuario: string): Promise<Proyecto> {
+    // idsCaracteristicas no existe en la entidad Proyecto (esta espera objetos
+    // CaracteristicaProyecto, no ids sueltos), así que se separa del resto de los
+    // datos y se resuelve a entidades antes de guardar.
+    const { idsCaracteristicas, ...datosProyecto } = datos;
     const proyecto = this.repositorioProyectos.create({
-      ...datos,
+      ...datosProyecto,
       etapaActual: EtapaProyecto.BANCO_IDEAS,
     });
+    if (idsCaracteristicas && idsCaracteristicas.length > 0) {
+      proyecto.caracteristicas = await this.repositorioCaracteristicas.findBy({
+        id: In(idsCaracteristicas),
+      });
+    }
     const proyectoGuardado = await this.repositorioProyectos.save(proyecto);
 
     await this.bitacoraService.registrarEvento({
@@ -35,7 +47,7 @@ export class ProyectosService {
   async listar(etapa?: EtapaProyecto): Promise<Proyecto[]> {
     return this.repositorioProyectos.find({
       where: etapa ? { etapaActual: etapa } : {},
-      relations: { tipoProyecto: true, localidad: true },
+      relations: { tipoProyecto: true, localidad: true, caracteristicas: true },
       order: { fechaCreacion: 'DESC' },
     });
   }
@@ -43,7 +55,7 @@ export class ProyectosService {
   async obtenerPorId(id: string): Promise<Proyecto> {
     const proyecto = await this.repositorioProyectos.findOne({
       where: { id },
-      relations: { tipoProyecto: true, localidad: true },
+      relations: { tipoProyecto: true, localidad: true, caracteristicas: true },
     });
     if (!proyecto) {
       throw new NotFoundException(`No existe un proyecto con id "${id}"`);
@@ -58,7 +70,20 @@ export class ProyectosService {
   ): Promise<Proyecto> {
     const proyecto = await this.obtenerPorId(id);
     this.validarQueSigaEnBancoIdeas(proyecto);
-    Object.assign(proyecto, datos);
+
+    // idsCaracteristicas no es una propiedad de la entidad: si se dejara dentro de
+    // "datos", Object.assign la copiaría igual como propiedad suelta sin sentido.
+    // Se comprueba "!== undefined" (y no solo el arreglo) para permitir que un
+    // arreglo vacío signifique explícitamente "quitar todas las características".
+    const { idsCaracteristicas, ...datosProyecto } = datos;
+    if (idsCaracteristicas !== undefined) {
+      proyecto.caracteristicas =
+        idsCaracteristicas.length > 0
+          ? await this.repositorioCaracteristicas.findBy({ id: In(idsCaracteristicas) })
+          : [];
+    }
+
+    Object.assign(proyecto, datosProyecto);
     const proyectoActualizado = await this.repositorioProyectos.save(proyecto);
 
     await this.bitacoraService.registrarEvento({
@@ -147,5 +172,26 @@ export class ProyectosService {
    */
   async avanzarEtapa(id: string, nuevaEtapa: EtapaProyecto): Promise<void> {
     await this.repositorioProyectos.update({ id }, { etapaActual: nuevaEtapa });
+  }
+
+  /**
+   * A diferencia de "avanzarEtapa" (uso interno de otros módulos al crear su propio
+   * registro), esto lo dispara el usuario a propósito desde Banco de Ideas con el
+   * botón "Enviar a Financiamiento", así que sí valida la etapa actual y deja
+   * registro explícito en la bitácora del cambio.
+   */
+  async enviarAFinanciamiento(id: string, nombreUsuario: string): Promise<Proyecto> {
+    const proyecto = await this.obtenerPorId(id);
+    this.validarQueSigaEnBancoIdeas(proyecto);
+
+    await this.avanzarEtapa(id, EtapaProyecto.FINANCIAMIENTO);
+    await this.bitacoraService.registrarEvento({
+      idProyecto: id,
+      etapa: EtapaProyecto.FINANCIAMIENTO,
+      descripcion: 'El proyecto se envió desde banco de ideas a la etapa de Financiamiento.',
+      usuario: nombreUsuario,
+    });
+
+    return this.obtenerPorId(id);
   }
 }

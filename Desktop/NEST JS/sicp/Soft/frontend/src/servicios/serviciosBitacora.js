@@ -6,3 +6,8 @@ export async function listarBitacora(idProyecto, etapa) {
   });
   return respuesta.data;
 }
+
+export async function agregarEventoBitacora(datos) {
+  const respuesta = await clienteHttp.post('/bitacora', datos);
+  return respuesta.data;
+}

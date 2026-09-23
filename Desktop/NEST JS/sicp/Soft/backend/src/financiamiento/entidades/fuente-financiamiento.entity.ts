@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { TipoFuenteFinanciamiento } from '../../tipo-fuente-financiamiento/entidades/tipo-fuente-financiamiento.entity';
 
 // Igual que en Proyecto: MySQL devuelve "decimal" como texto, así que se convierte
 // a number para que el frontend no tenga que preocuparse de eso.
@@ -14,8 +15,13 @@ const transformadorDecimal = {
  * `idProyecto` es un id simple (no una relación @ManyToOne formal), igual que en
  * Bitacora: mantiene este módulo independiente de ProyectosModule, más simple de
  * leer para alguien recién aprendiendo TypeORM.
+ *
+ * La combinación (idProyecto, idTipoFuenteFinanciamiento) es única: no tiene
+ * sentido agregar la misma fuente dos veces al mismo proyecto (ej. "FNDR" por
+ * duplicado) — si aporta más dinero, se edita el monto de la fila existente.
  */
 @Entity('fuentes_financiamiento')
+@Unique(['idProyecto', 'idTipoFuenteFinanciamiento'])
 export class FuenteFinanciamiento {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -23,9 +29,15 @@ export class FuenteFinanciamiento {
   @Column()
   idProyecto: string;
 
-  // Ej: "FNDR", "Fondos municipales propios", "Subvención regional".
+  // Relación real (no el patrón de "idProyecto suelto" de arriba) porque
+  // tipo_fuente_financiamiento es un catálogo fijo de Configuración, sin riesgo de
+  // dependencia circular: TipoFuenteFinanciamientoModule no depende de este módulo.
   @Column()
-  nombreFuente: string;
+  idTipoFuenteFinanciamiento: string;
+
+  @ManyToOne(() => TipoFuenteFinanciamiento)
+  @JoinColumn({ name: 'idTipoFuenteFinanciamiento' })
+  tipoFuenteFinanciamiento: TipoFuenteFinanciamiento;
 
   @Column({ type: 'decimal', precision: 14, scale: 2, transformer: transformadorDecimal })
   monto: number;

@@ -1,7 +1,12 @@
 import clienteHttp from './clienteHttp';
 
-export async function listarProyectos() {
-  const respuesta = await clienteHttp.get('/proyectos');
+// "etapa" es opcional: sin ella trae todos los proyectos (ej. Banco de ideas, que
+// los muestra todos); pasándola (ej. "financiamiento") el backend filtra por
+// etapaActual, para que cada pantalla de etapa solo vea los proyectos que le tocan.
+export async function listarProyectos(etapa) {
+  const respuesta = await clienteHttp.get('/proyectos', {
+    params: etapa ? { etapa } : undefined,
+  });
   return respuesta.data;
 }
 
@@ -22,6 +27,11 @@ export async function actualizarProyecto(id, datos) {
 
 export async function eliminarProyecto(id) {
   await clienteHttp.delete(`/proyectos/${id}`);
+}
+
+export async function enviarProyectoAFinanciamiento(id) {
+  const respuesta = await clienteHttp.post(`/proyectos/${id}/enviar-a-financiamiento`);
+  return respuesta.data;
 }
 
 export async function subirImagenProyecto(id, archivo) {

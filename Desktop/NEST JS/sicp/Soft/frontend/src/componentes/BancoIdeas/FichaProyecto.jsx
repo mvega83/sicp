@@ -6,13 +6,22 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from 'react-bootstrap/Spinner';
-import { eliminarImagenProyecto, obtenerProyecto, subirImagenProyecto } from '../../servicios/serviciosProyectos';
+import Form from 'react-bootstrap/Form';
+import {
+  eliminarImagenProyecto,
+  enviarProyectoAFinanciamiento,
+  obtenerProyecto,
+  subirImagenProyecto,
+} from '../../servicios/serviciosProyectos';
+import { agregarEventoBitacora } from '../../servicios/serviciosBitacora';
 import ListaBitacora from '../Bitacora/ListaBitacora';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
 import Icono from '../comunes/Icono';
+import MapaProyecto from '../comunes/MapaProyecto';
 import { construirUrlArchivo } from '../../utilidades/archivos';
 import { confirmarEliminacion, mostrarExito } from '../../utilidades/alertas';
-import { esEditable } from '../../utilidades/etapas';
+import { mostrarToastCreado } from '../../utilidades/toast';
+import { esEditable, ORDEN_ETAPAS } from '../../utilidades/etapas';
 
 export default function FichaProyecto() {
   const { id } = useParams();
@@ -24,6 +33,12 @@ export default function FichaProyecto() {
   // Imagen que se está mostrando en grande (null = visor cerrado). Se guarda la URL
   // completa, no el índice, porque es lo único que el visor necesita para dibujarse.
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [textoObservacion, setTextoObservacion] = useState('');
+  const [enviandoObservacion, setEnviandoObservacion] = useState(false);
+  // ListaBitacora solo recarga cuando cambian sus props; al no tener ninguna que
+  // varíe al agregar una observación, se le pasa esta como "key" para forzar que se
+  // vuelva a montar (y por lo tanto vuelva a pedir la lista actualizada al backend).
+  const [refrescoBitacora, setRefrescoBitacora] = useState(0);
 
   useEffect(() => {
     cargarProyecto();
@@ -59,6 +74,33 @@ export default function FichaProyecto() {
     mostrarExito('¡Eliminado!', 'El archivo se eliminó correctamente.');
   }
 
+  async function manejarEnvioObservacion(evento) {
+    evento.preventDefault();
+    const descripcion = textoObservacion.trim();
+    if (!descripcion) return;
+    setEnviandoObservacion(true);
+    try {
+      await agregarEventoBitacora({ idProyecto: id, etapa: ORDEN_ETAPAS[0], descripcion });
+      setTextoObservacion('');
+      setRefrescoBitacora((anterior) => anterior + 1);
+      mostrarToastCreado('La observación se agregó a la bitácora.');
+    } finally {
+      setEnviandoObservacion(false);
+    }
+  }
+
+  async function manejarEnvioAFinanciamiento() {
+    const confirmado = await confirmarEliminacion(
+      `El proyecto "${proyecto.nombre}" pasará a la etapa de Financiamiento y ya no podrá editarse desde banco de ideas.`,
+      '¿Enviar a Financiamiento?',
+      'Enviar',
+    );
+    if (!confirmado) return;
+    const proyectoActualizado = await enviarProyectoAFinanciamiento(id);
+    setProyecto(proyectoActualizado);
+    mostrarExito('¡Enviado!', 'El proyecto pasó a la etapa de Financiamiento.');
+  }
+
   if (cargando) return <Spinner animation="border" role="status" />;
   if (!proyecto) return <p>No se encontró el proyecto.</p>;
 
@@ -67,15 +109,31 @@ export default function FichaProyecto() {
       <EncabezadoPagina
         icono="folderOpen"
         titulo={proyecto.nombre}
-        descripcion={`${proyecto.tipoProyecto?.nombre} · ${proyecto.comuna}`}
-        // El botón de editar solo tiene sentido mientras el proyecto sigue en banco de
-        // ideas: una vez avanza de etapa, el backend rechaza el PATCH con 403.
+        descripcion={
+          <>
+            {proyecto.tipoProyecto?.nombre && (
+              <span className="pill tipo me-2">{proyecto.tipoProyecto.nombre}</span>
+            )}
+            {proyecto.localidad?.nombre && (
+              <span className="pill localidad me-2">{proyecto.localidad.nombre}</span>
+            )}
+            {proyecto.comuna && <span className="pill comuna">{proyecto.comuna}</span>}
+          </>
+        }
+        // Editar y "Enviar a Financiamiento" solo tienen sentido mientras el proyecto
+        // sigue en banco de ideas: una vez avanza de etapa, el backend rechaza ambas
+        // acciones (403 en el PATCH, y el envío ya no aplica dos veces).
         accion={
           esEditable(proyecto.etapaActual) && (
-            <Button variant="outline-secondary" onClick={() => navegar(`/proyectos/${id}/editar`)}>
-              <Icono nombre="pen" tamano={14} className="me-2" />
-              Editar
-            </Button>
+            <div className="d-flex gap-2">
+              <Button variant="outline-secondary" onClick={() => navegar(`/proyectos/${id}/editar`)}>
+                <Icono nombre="pen" tamano={14} className="me-2" />
+                Editar
+              </Button>
+              <Button variant="primary" onClick={manejarEnvioAFinanciamiento}>
+                Enviar a Financiamiento
+              </Button>
+            </div>
           )
         }
       />
@@ -103,6 +161,11 @@ export default function FichaProyecto() {
                   <div>{proyecto.longitud}</div>
                 </Col>
               </Row>
+              {/* Solo lectura: acá no se debe poder mover el marcador, esa edición
+                  vive en el formulario de alta/edición. */}
+              <div className="mt-3">
+                <MapaProyecto latitud={proyecto.latitud} longitud={proyecto.longitud} soloLectura />
+              </div>
             </Card.Body>
           </Card>
 
@@ -112,8 +175,8 @@ export default function FichaProyecto() {
               {proyecto.caracteristicas?.length ? (
                 <div className="d-flex flex-wrap gap-2">
                   {proyecto.caracteristicas.map((caracteristica) => (
-                    <span key={caracteristica} className="badge bg-light text-dark border">
-                      {caracteristica}
+                    <span key={caracteristica.id} className="badge bg-light text-dark border">
+                      {caracteristica.nombre}
                     </span>
                   ))}
                 </div>
@@ -209,7 +272,31 @@ export default function FichaProyecto() {
           <Card>
             <Card.Body>
               <Card.Title className="h6">Bitácora</Card.Title>
-              <ListaBitacora idProyecto={id} />
+
+              <Form onSubmit={manejarEnvioObservacion} className="mb-3">
+                <Form.Group>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    maxLength={1000}
+                    placeholder="Agregar una observación…"
+                    value={textoObservacion}
+                    onChange={(evento) => setTextoObservacion(evento.target.value)}
+                  />
+                </Form.Group>
+                <div className="d-flex justify-content-end mt-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="outline-secondary"
+                    disabled={enviandoObservacion || !textoObservacion.trim()}
+                  >
+                    {enviandoObservacion ? 'Guardando…' : 'Agregar observación'}
+                  </Button>
+                </div>
+              </Form>
+
+              <ListaBitacora key={refrescoBitacora} idProyecto={id} />
             </Card.Body>
           </Card>
         </Col>

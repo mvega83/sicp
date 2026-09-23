@@ -604,6 +604,24 @@ table.projects tr.proj-row:hover td {
   background: var(--sicp-acento-suave);
   color: var(--sicp-acento);
 }
+/* Color aparte de ok/warn/crit/info (reservados al estado de la etapa) para que el
+   tipo de proyecto se distinga a simple vista en las tablas y en la ficha. */
+.pill.tipo {
+  background: #dbe7ff;
+  color: #2954c8;
+}
+/* Color distinto al de "tipo" para que la localidad se distinga de él cuando se
+   muestran juntas (tablas y ficha del proyecto). */
+.pill.localidad {
+  background: #fde3c7;
+  color: #b5610f;
+}
+/* Tercer color, distinto a tipo/localidad, para que la comuna también resalte
+   cuando las tres etiquetas aparecen juntas. */
+.pill.comuna {
+  background: #d1f5ea;
+  color: #0f7a63;
+}
 
 /* ---------- login ---------- */
 .pagina-login {

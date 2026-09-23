@@ -59,6 +59,11 @@ export class ProyectosController {
     return this.proyectosService.eliminar(id);
   }
 
+  @Post(':id/enviar-a-financiamiento')
+  enviarAFinanciamiento(@Param('id') id: string, @Req() req: { user: UsuarioAutenticado }) {
+    return this.proyectosService.enviarAFinanciamiento(id, `${req.user.nombres} ${req.user.apellidos}`);
+  }
+
   @Post(':id/imagenes')
   @UseInterceptors(
     FileInterceptor('imagen', opcionesMulter('proyectos', ['.jpg', '.jpeg', '.png', '.webp', '.pdf'])),
