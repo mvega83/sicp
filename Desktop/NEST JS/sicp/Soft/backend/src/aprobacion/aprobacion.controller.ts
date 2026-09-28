@@ -30,8 +30,8 @@ export class AprobacionController {
   @UseInterceptors(
     FileInterceptor('archivo', opcionesMulter('aprobacion', ['.jpg', '.jpeg', '.png', '.webp', '.pdf'])),
   )
-  subirDocumento(@Body('idProyecto') idProyecto: string, @UploadedFile() archivo: Express.Multer.File) {
-    const url = this.archivosService.construirUrlPublica(archivo.filename);
+  async subirDocumento(@Body('idProyecto') idProyecto: string, @UploadedFile() archivo: Express.Multer.File) {
+    const url = await this.archivosService.guardarArchivo(archivo);
     return this.aprobacionService.agregarDocumento(idProyecto, url);
   }
 
@@ -44,7 +44,7 @@ export class AprobacionController {
   async eliminarDocumento(@Param('id') id: string) {
     const documento = await this.aprobacionService.obtenerDocumento(id);
     const nombreArchivo = documento.url.split('/').pop() ?? documento.url;
-    this.archivosService.eliminarArchivoFisico(nombreArchivo);
+    await this.archivosService.eliminarArchivoFisico(nombreArchivo);
     await this.aprobacionService.eliminarDocumento(id);
   }
 }

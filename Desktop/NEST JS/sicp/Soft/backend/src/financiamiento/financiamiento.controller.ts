@@ -49,8 +49,8 @@ export class FinanciamientoController {
   @UseInterceptors(
     FileInterceptor('archivo', opcionesMulter('financiamiento', ['.jpg', '.jpeg', '.png', '.webp', '.pdf'])),
   )
-  subirDocumento(@Body('idProyecto') idProyecto: string, @UploadedFile() archivo: Express.Multer.File) {
-    const url = this.archivosService.construirUrlPublica(archivo.filename);
+  async subirDocumento(@Body('idProyecto') idProyecto: string, @UploadedFile() archivo: Express.Multer.File) {
+    const url = await this.archivosService.guardarArchivo(archivo);
     return this.financiamientoService.agregarDocumento(idProyecto, url);
   }
 
@@ -63,7 +63,7 @@ export class FinanciamientoController {
   async eliminarDocumento(@Param('id') id: string) {
     const documento = await this.financiamientoService.obtenerDocumento(id);
     const nombreArchivo = documento.url.split('/').pop() ?? documento.url;
-    this.archivosService.eliminarArchivoFisico(nombreArchivo);
+    await this.archivosService.eliminarArchivoFisico(nombreArchivo);
     await this.financiamientoService.eliminarDocumento(id);
   }
 
@@ -73,11 +73,11 @@ export class FinanciamientoController {
   @UseInterceptors(
     FileInterceptor('archivo', opcionesMulter('financiamiento', ['.jpg', '.jpeg', '.png', '.webp', '.pdf'])),
   )
-  subirDecreto(
+  async subirDecreto(
     @Body() body: { idFuenteFinanciamiento: string; fechaDecreto: string },
     @UploadedFile() archivo: Express.Multer.File,
   ) {
-    const urlDecreto = this.archivosService.construirUrlPublica(archivo.filename);
+    const urlDecreto = await this.archivosService.guardarArchivo(archivo);
     return this.financiamientoService.agregarDecreto(
       body.idFuenteFinanciamiento,
       body.fechaDecreto,
@@ -94,7 +94,7 @@ export class FinanciamientoController {
   async eliminarDecreto(@Param('id') id: string) {
     const decreto = await this.financiamientoService.obtenerDecreto(id);
     const nombreArchivo = decreto.urlDecreto.split('/').pop() ?? decreto.urlDecreto;
-    this.archivosService.eliminarArchivoFisico(nombreArchivo);
+    await this.archivosService.eliminarArchivoFisico(nombreArchivo);
     await this.financiamientoService.eliminarDecreto(id);
   }
 }

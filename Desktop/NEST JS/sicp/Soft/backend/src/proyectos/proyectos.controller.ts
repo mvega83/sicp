@@ -83,17 +83,17 @@ export class ProyectosController {
     @UploadedFile() archivo: Express.Multer.File,
     @Req() req: { user: UsuarioAutenticado },
   ) {
-    const urlImagen = this.archivosService.construirUrlPublica(archivo.filename);
+    const urlImagen = await this.archivosService.guardarArchivo(archivo);
     return this.proyectosService.agregarImagen(id, urlImagen, `${req.user.nombres} ${req.user.apellidos}`);
   }
 
   @Delete(':id/imagenes/:nombreArchivo')
-  eliminarImagen(
+  async eliminarImagen(
     @Param('id') id: string,
     @Param('nombreArchivo') nombreArchivo: string,
     @Req() req: { user: UsuarioAutenticado },
   ) {
-    this.archivosService.eliminarArchivoFisico(nombreArchivo);
+    await this.archivosService.eliminarArchivoFisico(nombreArchivo);
     return this.proyectosService.eliminarImagen(id, nombreArchivo, `${req.user.nombres} ${req.user.apellidos}`);
   }
 }

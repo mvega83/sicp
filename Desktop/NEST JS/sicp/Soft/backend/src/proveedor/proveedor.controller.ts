@@ -50,7 +50,7 @@ export class ProveedorController {
     @UploadedFile() archivo: Express.Multer.File,
     @Req() req: { user: UsuarioAutenticado },
   ) {
-    const url = this.archivosService.construirUrlPublica(archivo.filename);
+    const url = await this.archivosService.guardarArchivo(archivo);
     return this.proveedorService.adjuntarBoletaGarantia(id, url, `${req.user.nombres} ${req.user.apellidos}`);
   }
 }

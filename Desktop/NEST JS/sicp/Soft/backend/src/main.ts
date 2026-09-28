@@ -28,7 +28,9 @@ async function bootstrap() {
   // que busca el archivo por nombre en la carpeta externa configurada en
   // CARPETA_ALMACENAMIENTO_ARCHIVOS, sin revelar la subcarpeta ni la ruta real en disco.
 
-  const puerto = process.env.PUERTO_APP ?? 3000;
+  // Render (y la mayoría de los hostings gratuitos) asignan el puerto ellos mismos
+  // y lo pasan en PORT — hay que escucharlo ahí, PUERTO_APP solo aplica en local.
+  const puerto = process.env.PORT ?? process.env.PUERTO_APP ?? 3000;
   await app.listen(puerto);
   console.log(`Backend de SICP escuchando en http://localhost:${puerto}`);
 }
