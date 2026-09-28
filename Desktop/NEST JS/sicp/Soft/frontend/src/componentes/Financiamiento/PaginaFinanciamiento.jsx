@@ -6,10 +6,12 @@ import Col from 'react-bootstrap/Col';
 import Spinner from 'react-bootstrap/Spinner';
 import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
-import ListaBitacora from '../Bitacora/ListaBitacora';
-import DetalleProyecto from '../comunes/DetalleProyecto';
+import BitacoraFlotante from '../Bitacora/BitacoraFlotante';
+import { CaracteristicasProyecto, DatosGeneralesProyecto, ImagenesProyecto } from '../comunes/DetalleProyecto';
+import EtiquetasProyecto from '../comunes/EtiquetasProyecto';
 import Icono from '../comunes/Icono';
-import { listarProyectos } from '../../servicios/serviciosProyectos';
+import TituloTarjeta from '../comunes/TituloTarjeta';
+import { enviarProyectoAAprobacion, listarProyectos } from '../../servicios/serviciosProyectos';
 import {
   crearFinanciamiento,
   eliminarDecretoFinanciamiento,
@@ -39,6 +41,7 @@ export default function PaginaFinanciamiento() {
   const [documentos, setDocumentos] = useState([]);
   const [subiendoDocumento, setSubiendoDocumento] = useState(false);
   const inputArchivoRef = useRef(null);
+  const [mostrarArchivosEtapa1, setMostrarArchivosEtapa1] = useState(false);
   const [datos, setDatos] = useState(VALORES_INICIALES);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -171,6 +174,21 @@ export default function PaginaFinanciamiento() {
     mostrarExito('¡Eliminado!', 'La fuente de financiamiento se eliminó correctamente.');
   }
 
+  async function manejarEnvioAAprobacion() {
+    const confirmado = await confirmarEliminacion(
+      `El proyecto "${proyectoSeleccionado.nombre}" pasará a la etapa de Aprobación.`,
+      '¿Enviar a Aprobación?',
+      'Enviar',
+    );
+    if (!confirmado) return;
+    await enviarProyectoAAprobacion(idProyecto);
+    mostrarExito('¡Enviado!', 'El proyecto pasó a la etapa de Aprobación.');
+    // Ya no pertenece a esta etapa, así que se vuelve al listado y se recarga para
+    // que deje de aparecer entre los proyectos de Financiamiento.
+    setIdProyecto(null);
+    cargarProyectos();
+  }
+
   // Ya se tiene la lista cargada, así que el nombre del proyecto elegido sale de
   // ahí en vez de pedirlo de nuevo al backend.
   const proyectoSeleccionado = proyectos.find((proyecto) => proyecto.id === idProyecto);
@@ -185,8 +203,23 @@ export default function PaginaFinanciamiento() {
     <div>
       <EncabezadoPagina
         icono="sackDollar"
-        titulo="Financiamiento"
+        titulo={proyectoSeleccionado ? `Financiamiento: ${proyectoSeleccionado.nombre}` : 'Financiamiento'}
         descripcion="Etapa 2 — fuentes de financiamiento asociadas a un proyecto."
+        etiquetas={proyectoSeleccionado && <EtiquetasProyecto proyecto={proyectoSeleccionado} />}
+        accion={
+          idProyecto && (
+            <div className="d-flex gap-2">
+              <Button variant="outline-secondary" size="sm" onClick={() => setIdProyecto(null)}>
+                <Icono nombre="arrowLeft" tamano={12} className="me-2" />
+                Volver al listado
+              </Button>
+              <Button variant="primary" size="sm" onClick={manejarEnvioAAprobacion}>
+                <Icono nombre="squareCheck" tamano={14} className="me-2" />
+                Enviar a Aprobación
+              </Button>
+            </div>
+          )
+        }
       />
 
       {!idProyecto ? (
@@ -236,118 +269,37 @@ export default function PaginaFinanciamiento() {
         )
       ) : (
         <>
-          <Button variant="outline-secondary" size="sm" className="mb-3" onClick={() => setIdProyecto(null)}>
-            <Icono nombre="arrowLeft" tamano={12} className="me-2" />
-            Volver al listado
-          </Button>
-
-          <DetalleProyecto proyecto={proyectoSeleccionado} />
-
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Row className="g-3">
+          <Row className="g-3 mb-3">
             <Col lg={7}>
-              <Form onSubmit={manejarEnvioFormulario} className="bg-white p-3 rounded border mb-3">
-                <Row className="g-2 align-items-end">
-                  <Col md={4}>
-                    <Form.Label className="small">Fuente</Form.Label>
-                    <Form.Select
-                      value={datos.idTipoFuenteFinanciamiento}
-                      onChange={(e) => setDatos({ ...datos, idTipoFuenteFinanciamiento: e.target.value })}
-                      required
-                    >
-                      <option value="" disabled>Selecciona una…</option>
-                      {tiposFuenteDisponibles.map((tipo) => (
-                        <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
-                      ))}
-                    </Form.Select>
-                    {tiposFuenteDisponibles.length === 0 && (
-                      <div className="text-secondary small mt-1">
-                        Ya se agregaron todas las fuentes disponibles a este proyecto.
-                      </div>
-                    )}
-                  </Col>
-                  <Col md={3}>
-                    <Form.Label className="small">Monto (CLP)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={datos.monto}
-                      onChange={(e) => setDatos({ ...datos, monto: e.target.value })}
-                      required
-                    />
-                  </Col>
-                  <Col md={3}>
-                    <Form.Label className="small">Observaciones</Form.Label>
-                    <Form.Control
-                      value={datos.observaciones}
-                      onChange={(e) => setDatos({ ...datos, observaciones: e.target.value })}
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      className="w-100"
-                      disabled={enviando || tiposFuenteDisponibles.length === 0}
-                    >
-                      Agregar
-                    </Button>
-                  </Col>
-                </Row>
-              </Form>
-
-              <div className="table-wrap">
-                <table className="projects">
-                  <thead>
-                    <tr>
-                      <th>Fuente</th>
-                      <th>Monto</th>
-                      <th>Observaciones</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fuentes.map((fuente) => (
-                      <tr className="proj-row" key={fuente.id}>
-                        <td>
-                          <div className="proj-name">{fuente.tipoFuenteFinanciamiento?.nombre}</div>
-                          {fuente.tipoFuenteFinanciamiento?.procedencia && (
-                            <div className="proj-commune">{fuente.tipoFuenteFinanciamiento.procedencia}</div>
-                          )}
-                        </td>
-                        <td className="mono">${Number(fuente.monto).toLocaleString('es-CL')}</td>
-                        <td className="text-secondary">{fuente.observaciones}</td>
-                        <td className="text-end">
-                          <Button
-                            size="sm"
-                            variant="link"
-                            aria-label="Decretos de la fuente"
-                            title="Decretos"
-                            onClick={() => abrirModalDecretos(fuente)}
-                          >
-                            <Icono nombre="fileLines" tamano={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="link"
-                            className="text-danger"
-                            aria-label="Eliminar fuente de financiamiento"
-                            title="Eliminar"
-                            onClick={() => manejarEliminar(fuente)}
-                          >
-                            <Icono nombre="trash" tamano={14} />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {proyectoSeleccionado && <DatosGeneralesProyecto proyecto={proyectoSeleccionado} />}
             </Col>
+
             <Col lg={5}>
-              <div className="bg-white p-3 rounded border mb-3">
+              {proyectoSeleccionado && (
+                <div className="mb-3">
+                  <CaracteristicasProyecto proyecto={proyectoSeleccionado} />
+                </div>
+              )}
+
+              {/* Solo lectura: archivos que se subieron en Banco de Ideas, esa
+                  etapa ya está congelada y no se editan desde acá. */}
+              <div className="mb-3">
+                <Button
+                  variant="light"
+                  className="btn-archivo-verde"
+                  size="sm"
+                  onClick={() => setMostrarArchivosEtapa1(true)}
+                >
+                  <Icono nombre="image" tamano={14} className="me-2" />
+                  Archivos etapa 1
+                </Button>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h2 className="h6 mb-0">Documentos</h2>
+                  <TituloTarjeta icono="fileLines" className="mb-0">Archivos</TituloTarjeta>
                   <Button
                     size="sm"
                     variant="outline-secondary"
@@ -425,13 +377,125 @@ export default function PaginaFinanciamiento() {
                   <p className="text-secondary small mb-0">Todavía no hay documentos.</p>
                 )}
               </div>
-
-              <div className="bg-white p-3 rounded border">
-                <h2 className="h6">Bitácora</h2>
-                <ListaBitacora idProyecto={idProyecto} etapa="financiamiento" />
-              </div>
             </Col>
           </Row>
+
+          <div className="bg-white p-3 rounded border mb-3">
+            <TituloTarjeta icono="sackDollar" className="mb-3">Fuentes de financiamiento</TituloTarjeta>
+
+            <Form onSubmit={manejarEnvioFormulario} className="mb-3">
+              <Row className="g-2 align-items-end">
+                <Col md={4}>
+                  <Form.Label className="small">Fuente</Form.Label>
+                  <Form.Select
+                    value={datos.idTipoFuenteFinanciamiento}
+                    onChange={(e) => setDatos({ ...datos, idTipoFuenteFinanciamiento: e.target.value })}
+                    required
+                  >
+                    <option value="" disabled>Selecciona una…</option>
+                    {tiposFuenteDisponibles.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
+                    ))}
+                  </Form.Select>
+                  {tiposFuenteDisponibles.length === 0 && (
+                    <div className="text-secondary small mt-1">
+                      Ya se agregaron todas las fuentes disponibles a este proyecto.
+                    </div>
+                  )}
+                </Col>
+                <Col md={3}>
+                  <Form.Label className="small">Monto (CLP)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={datos.monto}
+                    onChange={(e) => setDatos({ ...datos, monto: e.target.value })}
+                    required
+                  />
+                </Col>
+                <Col md={3}>
+                  <Form.Label className="small">Observaciones</Form.Label>
+                  <Form.Control
+                    value={datos.observaciones}
+                    onChange={(e) => setDatos({ ...datos, observaciones: e.target.value })}
+                  />
+                </Col>
+                <Col md={2}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="w-100"
+                    disabled={enviando || tiposFuenteDisponibles.length === 0}
+                  >
+                    Agregar
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+
+            {fuentes.length ? (
+              <Row className="g-2">
+                {fuentes.map((fuente) => (
+                  <Col md={4} key={fuente.id}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => abrirModalDecretos(fuente)}
+                      onKeyDown={(evento) => {
+                        if (evento.key === 'Enter') abrirModalDecretos(fuente);
+                      }}
+                      className="card-fuente position-relative"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <button
+                        type="button"
+                        onClick={(evento) => {
+                          evento.stopPropagation();
+                          manejarEliminar(fuente);
+                        }}
+                        aria-label="Eliminar fuente de financiamiento"
+                        className="btn btn-outline-danger"
+                        style={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          width: 22,
+                          height: 22,
+                          padding: 0,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Icono nombre="xmark" tamano={10} />
+                      </button>
+
+                      <div className="proj-name mb-1">{fuente.tipoFuenteFinanciamiento?.nombre}</div>
+                      <div className="h4 fw-bold mono mb-0" style={{ color: 'var(--sicp-acento)' }}>
+                        ${Number(fuente.monto).toLocaleString('es-CL')}
+                      </div>
+                      {fuente.tipoFuenteFinanciamiento?.procedencia && (
+                        <div className="text-secondary small mt-1">
+                          {fuente.tipoFuenteFinanciamiento.procedencia}
+                        </div>
+                      )}
+                      {fuente.observaciones && (
+                        <div className="text-secondary small mt-1">{fuente.observaciones}</div>
+                      )}
+                      <div className="card-fuente__pie d-flex align-items-center gap-2 text-secondary small">
+                        <Icono nombre="fileLines" tamano={13} />
+                        Ver decretos
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <p className="text-secondary small mb-0">No se registraron fuentes de financiamiento.</p>
+            )}
+          </div>
+
+          <BitacoraFlotante idProyecto={idProyecto} etapaActual={proyectoSeleccionado?.etapaActual} />
         </>
       )}
 
@@ -498,6 +562,19 @@ export default function PaginaFinanciamiento() {
             </ul>
           ) : (
             <p className="text-secondary small mb-0">Todavía no hay decretos para esta fuente.</p>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      <Modal show={mostrarArchivosEtapa1} onHide={() => setMostrarArchivosEtapa1(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title as="div">
+            <TituloTarjeta icono="image" as="span">Archivo Banco de Ideas</TituloTarjeta>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {proyectoSeleccionado && (
+            <ImagenesProyecto proyecto={proyectoSeleccionado} titulo={null} sinTarjeta />
           )}
         </Modal.Body>
       </Modal>

@@ -7,6 +7,8 @@ import SelectorProyecto from '../comunes/SelectorProyecto';
 import ListaBitacora from '../Bitacora/ListaBitacora';
 import { adjuntarRex, crearLicitacion, listarLicitaciones } from '../../servicios/serviciosLicitacion';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
+import EtiquetasProyecto from '../comunes/EtiquetasProyecto';
+import TituloTarjeta from '../comunes/TituloTarjeta';
 import { construirUrlArchivo } from '../../utilidades/archivos';
 
 const VALORES_INICIALES = {
@@ -20,6 +22,7 @@ const VALORES_INICIALES = {
 
 export default function PaginaLicitacion() {
   const [idProyecto, setIdProyecto] = useState(null);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
   const [licitaciones, setLicitaciones] = useState([]);
   const [datos, setDatos] = useState(VALORES_INICIALES);
   const [enviando, setEnviando] = useState(false);
@@ -62,11 +65,18 @@ export default function PaginaLicitacion() {
     <div>
       <EncabezadoPagina
         icono="folderOpen"
-        titulo="Licitación"
+        titulo={proyectoSeleccionado ? `Licitación: ${proyectoSeleccionado.nombre}` : 'Licitación'}
         descripcion="Etapa 3 — el proyecto sale a licitación."
+        etiquetas={proyectoSeleccionado && <EtiquetasProyecto proyecto={proyectoSeleccionado} />}
       />
 
-      <SelectorProyecto idProyectoSeleccionado={idProyecto} onSeleccionar={setIdProyecto} />
+      <SelectorProyecto
+        idProyectoSeleccionado={idProyecto}
+        onSeleccionar={(id, proyecto) => {
+          setIdProyecto(id);
+          setProyectoSeleccionado(proyecto);
+        }}
+      />
 
       {idProyecto && (
         <Row className="g-3">
@@ -166,7 +176,7 @@ export default function PaginaLicitacion() {
           </Col>
           <Col lg={5}>
             <div className="bg-white p-3 rounded border">
-              <h2 className="h6">Bitácora</h2>
+              <TituloTarjeta icono="clipboardList">Bitácora</TituloTarjeta>
               <ListaBitacora idProyecto={idProyecto} etapa="licitacion" />
             </div>
           </Col>

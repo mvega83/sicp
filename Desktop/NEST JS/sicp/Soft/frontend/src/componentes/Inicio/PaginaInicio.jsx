@@ -237,7 +237,7 @@ export default function PaginaInicio() {
                               />
                             ))}
                           </div>
-                          <span className="stepper-frac">{indiceEtapa + 1}/6</span>
+                          <span className="stepper-frac">{indiceEtapa + 1}/{ORDEN_ETAPAS.length}</span>
                         </div>
                       </td>
                       <td>

@@ -5,6 +5,7 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeor
 export enum EtapaProyecto {
   BANCO_IDEAS = 'banco_ideas',
   FINANCIAMIENTO = 'financiamiento',
+  APROBACION = 'aprobacion',
   LICITACION = 'licitacion',
   PROVEEDOR = 'proveedor',
   OBRA = 'obra',

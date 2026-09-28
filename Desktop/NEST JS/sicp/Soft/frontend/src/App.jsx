@@ -7,6 +7,7 @@ import ListaProyectos from './componentes/BancoIdeas/ListaProyectos';
 import FormularioProyecto from './componentes/BancoIdeas/FormularioProyecto';
 import FichaProyecto from './componentes/BancoIdeas/FichaProyecto';
 import PaginaFinanciamiento from './componentes/Financiamiento/PaginaFinanciamiento';
+import PaginaAprobacion from './componentes/Aprobacion/PaginaAprobacion';
 import PaginaLicitacion from './componentes/Licitacion/PaginaLicitacion';
 import PaginaProveedor from './componentes/Proveedor/PaginaProveedor';
 import PaginaObra from './componentes/Obra/PaginaObra';
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/proyectos/:id/editar" element={<FormularioProyecto />} />
             <Route path="/proyectos/:id" element={<FichaProyecto />} />
             <Route path="/financiamiento" element={<PaginaFinanciamiento />} />
+            <Route path="/aprobacion" element={<PaginaAprobacion />} />
             <Route path="/licitacion" element={<PaginaLicitacion />} />
             <Route path="/proveedor" element={<PaginaProveedor />} />
             <Route path="/obra" element={<PaginaObra />} />

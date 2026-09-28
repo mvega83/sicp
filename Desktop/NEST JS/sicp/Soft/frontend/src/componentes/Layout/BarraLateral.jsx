@@ -7,6 +7,7 @@ import Icono from '../comunes/Icono';
 const ETAPAS = [
   { ruta: '/proyectos', etiqueta: 'Banco de ideas', icono: 'lightbulb' },
   { ruta: '/financiamiento', etiqueta: 'Financiamiento', icono: 'sackDollar' },
+  { ruta: '/aprobacion', etiqueta: 'Aprobación', icono: 'squareCheck' },
   { ruta: '/licitacion', etiqueta: 'Licitación', icono: 'folderOpen' },
   { ruta: '/proveedor', etiqueta: 'Proveedor', icono: 'handshake' },
   { ruta: '/obra', etiqueta: 'Desarrollo de obra', icono: 'helmetSafety' },

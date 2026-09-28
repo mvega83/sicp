@@ -4,6 +4,7 @@
 export const ORDEN_ETAPAS = [
   'banco_ideas',
   'financiamiento',
+  'aprobacion',
   'licitacion',
   'proveedor',
   'obra',
@@ -13,6 +14,7 @@ export const ORDEN_ETAPAS = [
 const ESTADO_POR_ETAPA = {
   banco_ideas: { texto: 'En banco de ideas', tipo: 'info' },
   financiamiento: { texto: 'Buscando financiamiento', tipo: 'info' },
+  aprobacion: { texto: 'En aprobación', tipo: 'warn' },
   licitacion: { texto: 'En licitación', tipo: 'warn' },
   proveedor: { texto: 'Proveedor asignado', tipo: 'info' },
   obra: { texto: 'Obra en avance', tipo: 'ok' },

@@ -34,6 +34,16 @@ export async function enviarProyectoAFinanciamiento(id) {
   return respuesta.data;
 }
 
+export async function enviarProyectoAAprobacion(id) {
+  const respuesta = await clienteHttp.post(`/proyectos/${id}/enviar-a-aprobacion`);
+  return respuesta.data;
+}
+
+export async function enviarProyectoALicitacion(id) {
+  const respuesta = await clienteHttp.post(`/proyectos/${id}/enviar-a-licitacion`);
+  return respuesta.data;
+}
+
 export async function subirImagenProyecto(id, archivo) {
   const formulario = new FormData();
   formulario.append('imagen', archivo);

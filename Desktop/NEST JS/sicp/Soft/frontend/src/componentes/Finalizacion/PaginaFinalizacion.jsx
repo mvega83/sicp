@@ -8,12 +8,15 @@ import SelectorProyecto from '../comunes/SelectorProyecto';
 import ListaBitacora from '../Bitacora/ListaBitacora';
 import { adjuntarDocumentoCierre, crearFinalizacion, obtenerFinalizacion } from '../../servicios/serviciosFinalizacion';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
+import EtiquetasProyecto from '../comunes/EtiquetasProyecto';
+import TituloTarjeta from '../comunes/TituloTarjeta';
 import { construirUrlArchivo } from '../../utilidades/archivos';
 
 const VALORES_INICIALES = { fechaCierre: '', observacionesFinales: '' };
 
 export default function PaginaFinalizacion() {
   const [idProyecto, setIdProyecto] = useState(null);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
   const [finalizacion, setFinalizacion] = useState(null);
   const [datos, setDatos] = useState(VALORES_INICIALES);
   const [enviando, setEnviando] = useState(false);
@@ -51,9 +54,20 @@ export default function PaginaFinalizacion() {
 
   return (
     <div>
-      <EncabezadoPagina icono="circleCheck" titulo="Finalización" descripcion="Etapa 6 — cierre del proyecto." />
+      <EncabezadoPagina
+        icono="circleCheck"
+        titulo={proyectoSeleccionado ? `Finalización: ${proyectoSeleccionado.nombre}` : 'Finalización'}
+        descripcion="Etapa 6 — cierre del proyecto."
+        etiquetas={proyectoSeleccionado && <EtiquetasProyecto proyecto={proyectoSeleccionado} />}
+      />
 
-      <SelectorProyecto idProyectoSeleccionado={idProyecto} onSeleccionar={setIdProyecto} />
+      <SelectorProyecto
+        idProyectoSeleccionado={idProyecto}
+        onSeleccionar={(id, proyecto) => {
+          setIdProyecto(id);
+          setProyectoSeleccionado(proyecto);
+        }}
+      />
 
       {idProyecto && (
         <Row className="g-3">
@@ -103,7 +117,7 @@ export default function PaginaFinalizacion() {
           </Col>
           <Col lg={5}>
             <div className="bg-white p-3 rounded border">
-              <h2 className="h6">Bitácora</h2>
+              <TituloTarjeta icono="clipboardList">Bitácora</TituloTarjeta>
               <ListaBitacora idProyecto={idProyecto} etapa="finalizacion" />
             </div>
           </Col>

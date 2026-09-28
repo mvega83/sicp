@@ -194,4 +194,58 @@ export class ProyectosService {
 
     return this.obtenerPorId(id);
   }
+
+  /**
+   * Chequeo genérico para los avances manuales de etapa (botón "Enviar a X"): a
+   * diferencia de "validarQueSigaEnBancoIdeas" (específico de esa etapa), este se
+   * reutiliza para cualquier transición que dependa de en qué etapa esté el
+   * proyecto ahora mismo.
+   */
+  private validarEtapaActual(proyecto: Proyecto, etapaEsperada: EtapaProyecto): void {
+    if (proyecto.etapaActual !== etapaEsperada) {
+      throw new ForbiddenException(
+        `El proyecto debe estar en la etapa "${etapaEsperada}" para realizar esta acción.`,
+      );
+    }
+  }
+
+  /**
+   * Aprobación es una etapa intermedia entre Financiamiento y Licitación que, por
+   * ahora, no tiene datos propios que registrar — el usuario avanza el proyecto a
+   * propósito con el botón "Enviar a Aprobación" en la pantalla de Financiamiento.
+   */
+  async enviarAAprobacion(id: string, nombreUsuario: string): Promise<Proyecto> {
+    const proyecto = await this.obtenerPorId(id);
+    this.validarEtapaActual(proyecto, EtapaProyecto.FINANCIAMIENTO);
+
+    await this.avanzarEtapa(id, EtapaProyecto.APROBACION);
+    await this.bitacoraService.registrarEvento({
+      idProyecto: id,
+      etapa: EtapaProyecto.APROBACION,
+      descripcion: 'El proyecto se envió desde Financiamiento a la etapa de Aprobación.',
+      usuario: nombreUsuario,
+    });
+
+    return this.obtenerPorId(id);
+  }
+
+  /**
+   * Mismo criterio que enviarAAprobacion: mientras Aprobación no tenga su propio
+   * módulo de datos, el avance a Licitación también es manual, disparado desde la
+   * pantalla de Aprobación.
+   */
+  async enviarALicitacion(id: string, nombreUsuario: string): Promise<Proyecto> {
+    const proyecto = await this.obtenerPorId(id);
+    this.validarEtapaActual(proyecto, EtapaProyecto.APROBACION);
+
+    await this.avanzarEtapa(id, EtapaProyecto.LICITACION);
+    await this.bitacoraService.registrarEvento({
+      idProyecto: id,
+      etapa: EtapaProyecto.LICITACION,
+      descripcion: 'El proyecto se envió desde Aprobación a la etapa de Licitación.',
+      usuario: nombreUsuario,
+    });
+
+    return this.obtenerPorId(id);
+  }
 }

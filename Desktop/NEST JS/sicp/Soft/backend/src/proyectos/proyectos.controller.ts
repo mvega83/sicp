@@ -64,6 +64,16 @@ export class ProyectosController {
     return this.proyectosService.enviarAFinanciamiento(id, `${req.user.nombres} ${req.user.apellidos}`);
   }
 
+  @Post(':id/enviar-a-aprobacion')
+  enviarAAprobacion(@Param('id') id: string, @Req() req: { user: UsuarioAutenticado }) {
+    return this.proyectosService.enviarAAprobacion(id, `${req.user.nombres} ${req.user.apellidos}`);
+  }
+
+  @Post(':id/enviar-a-licitacion')
+  enviarALicitacion(@Param('id') id: string, @Req() req: { user: UsuarioAutenticado }) {
+    return this.proyectosService.enviarALicitacion(id, `${req.user.nombres} ${req.user.apellidos}`);
+  }
+
   @Post(':id/imagenes')
   @UseInterceptors(
     FileInterceptor('imagen', opcionesMulter('proyectos', ['.jpg', '.jpeg', '.png', '.webp', '.pdf'])),

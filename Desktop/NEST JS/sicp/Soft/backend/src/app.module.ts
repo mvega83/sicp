@@ -8,6 +8,7 @@ import { BitacoraModule } from './bitacora/bitacora.module';
 import { ArchivosModule } from './archivos/archivos.module';
 import { ProyectosModule } from './proyectos/proyectos.module';
 import { FinanciamientoModule } from './financiamiento/financiamiento.module';
+import { AprobacionModule } from './aprobacion/aprobacion.module';
 import { LicitacionModule } from './licitacion/licitacion.module';
 import { ProveedorModule } from './proveedor/proveedor.module';
 import { ObraModule } from './obra/obra.module';
@@ -32,10 +33,11 @@ import { TiposProyectoModule } from './tipos-proyecto/tipos-proyecto.module';
     // Un módulo por etapa del ciclo de vida del proyecto (ver design/ui-general.html).
     ProyectosModule, // Etapa 1: Banco de Ideas
     FinanciamientoModule, // Etapa 2
-    LicitacionModule, // Etapa 3
-    ProveedorModule, // Etapa 4
-    ObraModule, // Etapa 5
-    FinalizacionModule, // Etapa 6
+    AprobacionModule, // Etapa 3
+    LicitacionModule, // Etapa 4
+    ProveedorModule, // Etapa 5
+    ObraModule, // Etapa 6
+    FinalizacionModule, // Etapa 7
     // Sección Administración del menú.
     TipoUsuarioModule,
     UsuariosModule,

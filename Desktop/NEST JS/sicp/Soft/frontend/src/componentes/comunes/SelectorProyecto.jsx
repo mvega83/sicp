@@ -12,13 +12,20 @@ export default function SelectorProyecto({ idProyectoSeleccionado, onSeleccionar
     listarProyectos().then(setProyectos);
   }, []);
 
+  // Se manda también el objeto proyecto completo (no solo el id) para que la
+  // pantalla que use este selector pueda mostrar su nombre en el título sin tener
+  // que pedirlo de nuevo al backend — segundo argumento opcional, los que solo
+  // necesitan el id lo siguen ignorando sin romper nada.
+  function manejarCambio(evento) {
+    const id = evento.target.value || null;
+    const proyecto = proyectos.find((p) => p.id === id) ?? null;
+    onSeleccionar(id, proyecto);
+  }
+
   return (
     <Form.Group className="selector-proyecto mb-4">
       <Form.Label>Proyecto</Form.Label>
-      <Form.Select
-        value={idProyectoSeleccionado ?? ''}
-        onChange={(evento) => onSeleccionar(evento.target.value || null)}
-      >
+      <Form.Select value={idProyectoSeleccionado ?? ''} onChange={manejarCambio}>
         <option value="">Selecciona un proyecto…</option>
         {proyectos.map((proyecto) => (
           <option key={proyecto.id} value={proyecto.id}>

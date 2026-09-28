@@ -7,12 +7,15 @@ import SelectorProyecto from '../comunes/SelectorProyecto';
 import ListaBitacora from '../Bitacora/ListaBitacora';
 import { adjuntarDocumentoEstadoPago, crearEstadoPago, listarEstadosPago } from '../../servicios/serviciosObra';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
+import EtiquetasProyecto from '../comunes/EtiquetasProyecto';
+import TituloTarjeta from '../comunes/TituloTarjeta';
 import { construirUrlArchivo } from '../../utilidades/archivos';
 
 const VALORES_INICIALES = { ito: '', numeroEstadoPago: '', monto: '', fecha: '', descripcion: '' };
 
 export default function PaginaObra() {
   const [idProyecto, setIdProyecto] = useState(null);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
   const [estadosPago, setEstadosPago] = useState([]);
   const [datos, setDatos] = useState(VALORES_INICIALES);
   const [enviando, setEnviando] = useState(false);
@@ -56,11 +59,18 @@ export default function PaginaObra() {
     <div>
       <EncabezadoPagina
         icono="helmetSafety"
-        titulo="Desarrollo de obra"
+        titulo={proyectoSeleccionado ? `Desarrollo de obra: ${proyectoSeleccionado.nombre}` : 'Desarrollo de obra'}
         descripcion="Etapa 5 — estados de pago de la ejecución de la obra."
+        etiquetas={proyectoSeleccionado && <EtiquetasProyecto proyecto={proyectoSeleccionado} />}
       />
 
-      <SelectorProyecto idProyectoSeleccionado={idProyecto} onSeleccionar={setIdProyecto} />
+      <SelectorProyecto
+        idProyectoSeleccionado={idProyecto}
+        onSeleccionar={(id, proyecto) => {
+          setIdProyecto(id);
+          setProyectoSeleccionado(proyecto);
+        }}
+      />
 
       {idProyecto && (
         <Row className="g-3">
@@ -149,7 +159,7 @@ export default function PaginaObra() {
           </Col>
           <Col lg={5}>
             <div className="bg-white p-3 rounded border">
-              <h2 className="h6">Bitácora</h2>
+              <TituloTarjeta icono="clipboardList">Bitácora</TituloTarjeta>
               <ListaBitacora idProyecto={idProyecto} etapa="obra" />
             </div>
           </Col>

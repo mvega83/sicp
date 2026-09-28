@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsuarioAutenticado } from '../auth/tipos/usuario-autenticado';
 import { BitacoraService } from './bitacora.service';
 import { CrearEventoBitacoraDto } from './dto/crear-evento-bitacora.dto';
+import { ActualizarEventoBitacoraDto } from './dto/actualizar-evento-bitacora.dto';
 import { EtapaProyecto } from './entidades/bitacora.entity';
 
 @Controller('bitacora')
@@ -24,9 +25,15 @@ export class BitacoraController {
   // usuario agregue una observación libre (ej. desde Banco de Ideas).
   @Post()
   crear(@Body() datos: CrearEventoBitacoraDto, @Req() req: { user: UsuarioAutenticado }) {
-    return this.bitacoraService.registrarEvento({
-      ...datos,
-      usuario: `${req.user.nombres} ${req.user.apellidos}`,
-    });
+    return this.bitacoraService.agregarComentario(
+      datos.idProyecto,
+      datos.descripcion,
+      `${req.user.nombres} ${req.user.apellidos}`,
+    );
+  }
+
+  @Patch(':id')
+  actualizar(@Param('id') id: string, @Body() datos: ActualizarEventoBitacoraDto) {
+    return this.bitacoraService.actualizarEvento(id, datos.descripcion);
   }
 }

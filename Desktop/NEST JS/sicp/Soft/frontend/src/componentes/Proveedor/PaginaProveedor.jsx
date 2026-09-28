@@ -7,6 +7,8 @@ import SelectorProyecto from '../comunes/SelectorProyecto';
 import ListaBitacora from '../Bitacora/ListaBitacora';
 import { adjuntarBoletaGarantia, crearProveedor, listarProveedores } from '../../servicios/serviciosProveedor';
 import EncabezadoPagina from '../comunes/EncabezadoPagina';
+import EtiquetasProyecto from '../comunes/EtiquetasProyecto';
+import TituloTarjeta from '../comunes/TituloTarjeta';
 import { construirUrlArchivo } from '../../utilidades/archivos';
 
 const VALORES_INICIALES = {
@@ -19,6 +21,7 @@ const VALORES_INICIALES = {
 
 export default function PaginaProveedor() {
   const [idProyecto, setIdProyecto] = useState(null);
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
   const [proveedores, setProveedores] = useState([]);
   const [datos, setDatos] = useState(VALORES_INICIALES);
   const [enviando, setEnviando] = useState(false);
@@ -55,11 +58,18 @@ export default function PaginaProveedor() {
     <div>
       <EncabezadoPagina
         icono="handshake"
-        titulo="Proveedor"
+        titulo={proyectoSeleccionado ? `Proveedor: ${proyectoSeleccionado.nombre}` : 'Proveedor'}
         descripcion="Etapa 4 — empresa adjudicada, boleta de garantía y datos de pago."
+        etiquetas={proyectoSeleccionado && <EtiquetasProyecto proyecto={proyectoSeleccionado} />}
       />
 
-      <SelectorProyecto idProyectoSeleccionado={idProyecto} onSeleccionar={setIdProyecto} />
+      <SelectorProyecto
+        idProyectoSeleccionado={idProyecto}
+        onSeleccionar={(id, proyecto) => {
+          setIdProyecto(id);
+          setProyectoSeleccionado(proyecto);
+        }}
+      />
 
       {idProyecto && (
         <Row className="g-3">
@@ -151,7 +161,7 @@ export default function PaginaProveedor() {
           </Col>
           <Col lg={5}>
             <div className="bg-white p-3 rounded border">
-              <h2 className="h6">Bitácora</h2>
+              <TituloTarjeta icono="clipboardList">Bitácora</TituloTarjeta>
               <ListaBitacora idProyecto={idProyecto} etapa="proveedor" />
             </div>
           </Col>

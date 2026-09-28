@@ -7,6 +7,7 @@ import { join } from 'path';
 export const SUBCARPETAS_ARCHIVOS = [
   'proyectos',
   'financiamiento',
+  'aprobacion',
   'licitaciones',
   'proveedores',
   'obras',
