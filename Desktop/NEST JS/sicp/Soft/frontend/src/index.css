@@ -628,6 +628,19 @@ table.projects tr.proj-row:hover td {
   border-color: transparent !important;
   box-shadow: 0 0 0 0.2rem rgba(180, 121, 30, 0.25) !important;
 }
+.btn-archivo-azul {
+  background: #cfe3f8;
+  color: #1d5fad;
+  border: 1px solid transparent;
+}
+.btn-archivo-azul:hover,
+.btn-archivo-azul:focus,
+.btn-archivo-azul:active {
+  background: #b8d4f3 !important;
+  color: #164a87 !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 0.2rem rgba(29, 95, 173, 0.25) !important;
+}
 
 /* Tarjeta clicable de una fuente de financiamiento (ver
    TablaFuentesFinanciamiento.jsx): eleva y resalta el borde al pasar el mouse,
@@ -890,4 +903,97 @@ table.projects tr.proj-row:hover td {
 /* ---------- utilitarias ---------- */
 .selector-proyecto {
   max-width: 420px;
+}
+
+/* ---------- línea de etapas de Licitación (stepper de 6 pasos) ---------- */
+/* A diferencia de .stepper-mini (que resume el avance entre las 6 etapas del
+   proyecto en la tabla de Inicio), esto es la línea de tiempo horizontal para
+   los pasos SECUENCIALES de un mismo formulario (Solicitante, Resolución,
+   Datos de la licitación, Adjudicación, REX de adjudicación, ITO) — los
+   "botones" numerados van uno al lado del otro, unidos por un conector
+   horizontal, con el contenido del paso activo debajo. Cada paso queda
+   visualmente bloqueado hasta completar el anterior. Con 6 pasos la cabecera
+   puede superar el ancho de la tarjeta en pantallas angostas, así que se deja
+   scroll horizontal en vez de que el texto se corte o se amontone.*/
+.etapas-licitacion-cabecera {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.etapa-licitacion-boton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.etapa-licitacion-boton:hover:not(:disabled) {
+  background: var(--sicp-fondo);
+}
+.etapa-licitacion-boton:disabled {
+  cursor: not-allowed;
+}
+.etapa-licitacion-numero {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.etapa-licitacion-numero.activo {
+  background: var(--sicp-acento);
+  color: #fff;
+}
+.etapa-licitacion-numero.completado {
+  background: var(--sicp-acento-suave);
+  color: var(--sicp-acento);
+}
+.etapa-licitacion-numero.bloqueado {
+  background: var(--sicp-fondo);
+  color: #a6a8c9;
+  border: 1px solid var(--sicp-borde);
+}
+.etapa-licitacion-numero.seleccionado {
+  box-shadow: 0 0 0 3px var(--sicp-acento-suave);
+}
+.etapa-licitacion-label {
+  font-weight: 700;
+  font-size: 14.5px;
+  white-space: nowrap;
+  color: inherit;
+}
+.etapa-licitacion-label.bloqueado {
+  color: #a6a8c9;
+  font-weight: 600;
+}
+.etapa-licitacion-label.seleccionado {
+  color: var(--sicp-acento);
+}
+.etapa-licitacion-conector {
+  flex: 1;
+  min-width: 32px;
+  height: 2px;
+  background: var(--sicp-borde);
+  margin: 0 14px;
+}
+.etapa-licitacion-conector.completado {
+  background: var(--sicp-acento-suave);
+}
+.etapa-licitacion-resumen {
+  background: var(--sicp-fondo);
+  border: 1px solid var(--sicp-borde);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
 }
